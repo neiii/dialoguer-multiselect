@@ -1,5 +1,5 @@
 use console::Term;
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select, Sort};
+use dialoguer_multiselect::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select, Sort};
 
 fn main() {
     let items = &[

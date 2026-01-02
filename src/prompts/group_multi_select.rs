@@ -7,16 +7,45 @@ use crate::{
     Result,
 };
 
+/// Represents the state of an item in GroupMultiSelect.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum ItemState {
+    /// Normal item - can be focused and selected
+    #[default]
+    Normal,
+    /// Disabled item - cursor skips, cannot be selected
+    Disabled {
+        /// Reason why the item is disabled
+        reason: String,
+    },
+    /// Warning item - can be focused and selected, shows warning message
+    Warning {
+        /// Warning message to display
+        message: String,
+    },
+}
+
 pub struct Group<T> {
     pub label: String,
     pub items: Vec<T>,
+    pub states: Vec<ItemState>,
 }
 
 impl<T> Group<T> {
     pub fn new(label: impl Into<String>, items: Vec<T>) -> Self {
+        let len = items.len();
         Self {
             label: label.into(),
             items,
+            states: vec![ItemState::Normal; len],
+        }
+    }
+
+    pub fn with_states(label: impl Into<String>, items: Vec<T>, states: Vec<ItemState>) -> Self {
+        Self {
+            label: label.into(),
+            items,
+            states,
         }
     }
 }
@@ -70,6 +99,16 @@ impl<'a, T> GroupMultiSelect<'a, T> {
 
     pub fn group(mut self, label: impl Into<String>, items: Vec<T>) -> Self {
         self.groups.push(Group::new(label, items));
+        self
+    }
+
+    pub fn group_with_states(
+        mut self,
+        label: impl Into<String>,
+        items: Vec<(T, ItemState)>,
+    ) -> Self {
+        let (items, states): (Vec<T>, Vec<ItemState>) = items.into_iter().unzip();
+        self.groups.push(Group::with_states(label, items, states));
         self
     }
 
@@ -171,11 +210,21 @@ impl<T: ToString> GroupMultiSelect<'_, T> {
                     self.toggle(&mut checked, cursor);
                 }
                 Key::Char('a') => {
-                    let all_selected = checked.iter().flatten().all(|&b| b);
-                    let new_state = !all_selected;
-                    for group in &mut checked {
-                        for item in group {
-                            *item = new_state;
+                    let all_selectable_selected = self
+                        .groups
+                        .iter()
+                        .zip(checked.iter())
+                        .flat_map(|(group, group_checked)| {
+                            group.states.iter().zip(group_checked.iter())
+                        })
+                        .filter(|(state, _)| !matches!(state, ItemState::Disabled { .. }))
+                        .all(|(_, &is_checked)| is_checked);
+                    let new_state = !all_selectable_selected;
+                    for (group, group_checked) in self.groups.iter().zip(checked.iter_mut()) {
+                        for (idx, state) in group.states.iter().enumerate() {
+                            if !matches!(state, ItemState::Disabled { .. }) {
+                                group_checked[idx] = new_state;
+                            }
                         }
                     }
                 }
@@ -245,39 +294,76 @@ impl<T: ToString> GroupMultiSelect<'_, T> {
         Cursor::default()
     }
 
+    fn is_item_disabled(&self, cursor: Cursor) -> bool {
+        match cursor.item_idx {
+            None => false,
+            Some(item_idx) => {
+                matches!(
+                    self.groups[cursor.group_idx].states.get(item_idx),
+                    Some(ItemState::Disabled { .. })
+                )
+            }
+        }
+    }
+
     fn move_cursor_down(&self, cursor: Cursor) -> Cursor {
-        let flat = self.cursor_to_flat(cursor);
         let total = self.total_rows();
-        if flat + 1 < total {
-            self.flat_to_cursor(flat + 1)
-        } else {
-            cursor
+        let mut flat = self.cursor_to_flat(cursor);
+
+        loop {
+            if flat + 1 >= total {
+                return cursor;
+            }
+            flat += 1;
+            let new_cursor = self.flat_to_cursor(flat);
+            if !self.is_item_disabled(new_cursor) {
+                return new_cursor;
+            }
         }
     }
 
     fn move_cursor_up(&self, cursor: Cursor) -> Cursor {
-        let flat = self.cursor_to_flat(cursor);
-        if flat > 0 {
-            self.flat_to_cursor(flat - 1)
-        } else {
-            cursor
+        let mut flat = self.cursor_to_flat(cursor);
+
+        loop {
+            if flat == 0 {
+                return cursor;
+            }
+            flat -= 1;
+            let new_cursor = self.flat_to_cursor(flat);
+            if !self.is_item_disabled(new_cursor) {
+                return new_cursor;
+            }
         }
     }
 
     fn toggle(&self, checked: &mut [Vec<bool>], cursor: Cursor) {
         match cursor.item_idx {
             None => {
-                if self.groups[cursor.group_idx].items.is_empty() {
+                let group = &self.groups[cursor.group_idx];
+                if group.items.is_empty() {
                     return;
                 }
-                let all_selected = checked[cursor.group_idx].iter().all(|&b| b);
-                let new_state = !all_selected;
-                for item in &mut checked[cursor.group_idx] {
-                    *item = new_state;
+                let selectable_all_selected = group
+                    .states
+                    .iter()
+                    .zip(checked[cursor.group_idx].iter())
+                    .filter(|(state, _)| !matches!(state, ItemState::Disabled { .. }))
+                    .all(|(_, &is_checked)| is_checked);
+                let new_state = !selectable_all_selected;
+                for (idx, state) in group.states.iter().enumerate() {
+                    if !matches!(state, ItemState::Disabled { .. }) {
+                        checked[cursor.group_idx][idx] = new_state;
+                    }
                 }
             }
             Some(item_idx) => {
-                checked[cursor.group_idx][item_idx] = !checked[cursor.group_idx][item_idx];
+                if !matches!(
+                    self.groups[cursor.group_idx].states.get(item_idx),
+                    Some(ItemState::Disabled { .. })
+                ) {
+                    checked[cursor.group_idx][item_idx] = !checked[cursor.group_idx][item_idx];
+                }
             }
         }
     }
@@ -346,7 +432,22 @@ impl<T: ToString> GroupMultiSelect<'_, T> {
                 Some(item_idx) => {
                     let item_text = self.groups[pos.group_idx].items[item_idx].to_string();
                     let is_checked = checked[pos.group_idx][item_idx];
-                    render.group_multi_select_item(&item_text, is_checked, is_active)?;
+                    let state = &self.groups[pos.group_idx].states[item_idx];
+
+                    match state {
+                        ItemState::Normal => {
+                            render.group_multi_select_item(&item_text, is_checked, is_active)?;
+                        }
+                        ItemState::Disabled { reason } => {
+                            render
+                                .group_multi_select_item_disabled(&item_text, reason, is_active)?;
+                        }
+                        ItemState::Warning { message } => {
+                            render.group_multi_select_item_warning(
+                                &item_text, message, is_checked, is_active,
+                            )?;
+                        }
+                    }
                 }
             }
         }
@@ -456,5 +557,83 @@ mod tests {
 
         gs.toggle(&mut checked, cursor);
         assert_eq!(checked[0], vec![false, true]);
+    }
+
+    #[test]
+    fn test_disabled_item_cannot_toggle() {
+        let gs: GroupMultiSelect<'_, &str> = GroupMultiSelect::new().group_with_states(
+            "A",
+            vec![
+                ("a1", ItemState::Normal),
+                (
+                    "a2",
+                    ItemState::Disabled {
+                        reason: "test".into(),
+                    },
+                ),
+            ],
+        );
+
+        let mut checked = vec![vec![false, false]];
+        let cursor = Cursor {
+            group_idx: 0,
+            item_idx: Some(1),
+        };
+
+        gs.toggle(&mut checked, cursor);
+        assert_eq!(checked[0], vec![false, false]);
+    }
+
+    #[test]
+    fn test_group_toggle_skips_disabled() {
+        let gs: GroupMultiSelect<'_, &str> = GroupMultiSelect::new().group_with_states(
+            "A",
+            vec![
+                ("a1", ItemState::Normal),
+                (
+                    "a2",
+                    ItemState::Disabled {
+                        reason: "test".into(),
+                    },
+                ),
+                ("a3", ItemState::Normal),
+            ],
+        );
+
+        let mut checked = vec![vec![false, false, false]];
+        let cursor = Cursor {
+            group_idx: 0,
+            item_idx: None,
+        };
+
+        gs.toggle(&mut checked, cursor);
+        assert_eq!(checked[0], vec![true, false, true]);
+    }
+
+    #[test]
+    fn test_cursor_skips_disabled() {
+        let gs: GroupMultiSelect<'_, &str> = GroupMultiSelect::new().group_with_states(
+            "A",
+            vec![
+                ("a1", ItemState::Normal),
+                (
+                    "a2",
+                    ItemState::Disabled {
+                        reason: "test".into(),
+                    },
+                ),
+                ("a3", ItemState::Normal),
+            ],
+        );
+
+        let cursor = Cursor {
+            group_idx: 0,
+            item_idx: Some(0),
+        };
+        let new_cursor = gs.move_cursor_down(cursor);
+        assert_eq!(new_cursor.item_idx, Some(2));
+
+        let back_cursor = gs.move_cursor_up(new_cursor);
+        assert_eq!(back_cursor.item_idx, Some(0));
     }
 }

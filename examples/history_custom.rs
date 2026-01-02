@@ -1,4 +1,4 @@
-use dialoguer::{theme::ColorfulTheme, History, Input};
+use dialoguer_multiselect::{theme::ColorfulTheme, History, Input};
 use std::{collections::VecDeque, process};
 
 fn main() {

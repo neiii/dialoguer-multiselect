@@ -1,4 +1,4 @@
-use dialoguer::{theme::ColorfulTheme, FuzzySelect};
+use dialoguer_multiselect::{theme::ColorfulTheme, FuzzySelect};
 
 fn main() {
     let selections = &[

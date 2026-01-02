@@ -1,4 +1,4 @@
-use dialoguer::Editor;
+use dialoguer_multiselect::Editor;
 
 fn main() {
     if let Some(rv) = Editor::new().edit("Enter a commit message").unwrap() {

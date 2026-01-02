@@ -278,6 +278,31 @@ impl<'a> TermThemeRenderer<'a> {
         })
     }
 
+    pub fn group_multi_select_item_disabled(
+        &mut self,
+        text: &str,
+        reason: &str,
+        active: bool,
+    ) -> Result {
+        self.write_formatted_line(|this, buf| {
+            this.theme
+                .format_group_multi_select_item_disabled(buf, text, reason, active)
+        })
+    }
+
+    pub fn group_multi_select_item_warning(
+        &mut self,
+        text: &str,
+        message: &str,
+        checked: bool,
+        active: bool,
+    ) -> Result {
+        self.write_formatted_line(|this, buf| {
+            this.theme
+                .format_group_multi_select_item_warning(buf, text, message, checked, active)
+        })
+    }
+
     pub fn clear(&mut self) -> Result {
         self.term
             .clear_last_lines(self.height + self.prompt_height)?;

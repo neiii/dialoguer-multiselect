@@ -50,7 +50,7 @@ pub use prompts::fuzzy_select::FuzzySelect;
 pub use prompts::password::Password;
 pub use prompts::{
     confirm::Confirm,
-    group_multi_select::{Group, GroupMultiSelect},
+    group_multi_select::{Group, GroupMultiSelect, ItemState},
     input::Input,
     multi_select::MultiSelect,
     select::Select,

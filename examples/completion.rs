@@ -1,4 +1,4 @@
-use dialoguer::{theme::ColorfulTheme, Completion, Input};
+use dialoguer_multiselect::{theme::ColorfulTheme, Completion, Input};
 
 fn main() {
     println!("Use the Right arrow or Tab to complete your command");

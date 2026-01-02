@@ -323,4 +323,32 @@ pub trait Theme {
     ) -> fmt::Result {
         self.format_multi_select_prompt_selection(f, prompt, selections)
     }
+
+    fn format_group_multi_select_item_disabled(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        reason: &str,
+        active: bool,
+    ) -> fmt::Result {
+        let prefix = if active { ">" } else { " " };
+        write!(f, "{}   \x1b[90m☐ {} ({})\x1b[0m", prefix, text, reason)
+    }
+
+    fn format_group_multi_select_item_warning(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        message: &str,
+        checked: bool,
+        active: bool,
+    ) -> fmt::Result {
+        let icon = if checked { "☑" } else { "☐" };
+        let prefix = if active { ">" } else { " " };
+        write!(
+            f,
+            "{}   {} {} \x1b[33m⚠ {}\x1b[0m",
+            prefix, icon, text, message
+        )
+    }
 }
