@@ -4,7 +4,10 @@ use console::{measure_text_width, Term};
 #[cfg(feature = "fuzzy-select")]
 use fuzzy_matcher::skim::SkimMatcherV2;
 
-use crate::{theme::Theme, Result};
+use crate::{
+    theme::{GroupState, Theme},
+    Result,
+};
 
 /// Helper struct to conveniently render a theme.
 pub(crate) struct TermThemeRenderer<'a> {
@@ -232,6 +235,46 @@ impl<'a> TermThemeRenderer<'a> {
         self.write_formatted_line(|this, buf| {
             this.theme
                 .format_sort_prompt_item(buf, text, picked, active)
+        })
+    }
+
+    pub fn group_multi_select_prompt(
+        &mut self,
+        prompt: &str,
+        paging_info: Option<(usize, usize)>,
+    ) -> Result {
+        self.write_formatted_prompt(|this, buf| {
+            this.theme.format_group_multi_select_prompt(buf, prompt)?;
+            if let Some(paging_info) = paging_info {
+                TermThemeRenderer::write_paging_info(buf, paging_info)?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn group_multi_select_prompt_selection(&mut self, prompt: &str, sel: &[&str]) -> Result {
+        self.write_formatted_prompt(|this, buf| {
+            this.theme
+                .format_group_multi_select_prompt_selection(buf, prompt, sel)
+        })
+    }
+
+    pub fn group_multi_select_header(
+        &mut self,
+        text: &str,
+        state: GroupState,
+        active: bool,
+    ) -> Result {
+        self.write_formatted_line(|this, buf| {
+            this.theme
+                .format_group_multi_select_header(buf, text, state, active)
+        })
+    }
+
+    pub fn group_multi_select_item(&mut self, text: &str, checked: bool, active: bool) -> Result {
+        self.write_formatted_line(|this, buf| {
+            this.theme
+                .format_group_multi_select_item(buf, text, checked, active)
         })
     }
 

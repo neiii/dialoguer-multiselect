@@ -13,6 +13,17 @@ mod simple;
 pub use colorful::ColorfulTheme;
 pub use simple::SimpleTheme;
 
+/// Represents the selection state of a group in GroupMultiSelect.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GroupState {
+    /// No items in the group are selected
+    None,
+    /// Some items in the group are selected
+    Partial,
+    /// All items in the group are selected
+    All,
+}
+
 /// Implements a theme for dialoguer.
 pub trait Theme {
     /// Formats a prompt.
@@ -261,5 +272,55 @@ pub trait Theme {
 
         let (st_head, st_tail) = search_term.split_at(bytes_pos);
         write!(f, "{st_head}|{st_tail}")
+    }
+
+    /// Formats a group header row in GroupMultiSelect.
+    fn format_group_multi_select_header(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        state: GroupState,
+        active: bool,
+    ) -> fmt::Result {
+        let icon = match state {
+            GroupState::All => "◉",
+            GroupState::Partial => "◐",
+            GroupState::None => "○",
+        };
+        let prefix = if active { ">" } else { " " };
+        write!(f, "{} {} {}", prefix, icon, text)
+    }
+
+    /// Formats a group item row (indented) in GroupMultiSelect.
+    fn format_group_multi_select_item(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        checked: bool,
+        active: bool,
+    ) -> fmt::Result {
+        let icon = if checked { "☑" } else { "☐" };
+        let prefix = if active { ">" } else { " " };
+        write!(f, "{}   {} {}", prefix, icon, text)
+    }
+
+    /// Formats a group multi select prompt.
+    #[inline]
+    fn format_group_multi_select_prompt(
+        &self,
+        f: &mut dyn fmt::Write,
+        prompt: &str,
+    ) -> fmt::Result {
+        self.format_prompt(f, prompt)
+    }
+
+    /// Formats a group multi select prompt after selection.
+    fn format_group_multi_select_prompt_selection(
+        &self,
+        f: &mut dyn fmt::Write,
+        prompt: &str,
+        selections: &[&str],
+    ) -> fmt::Result {
+        self.format_multi_select_prompt_selection(f, prompt, selections)
     }
 }

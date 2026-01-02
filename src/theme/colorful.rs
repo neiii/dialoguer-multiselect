@@ -4,7 +4,7 @@ use console::{style, Style, StyledObject};
 #[cfg(feature = "fuzzy-select")]
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
-use crate::theme::Theme;
+use crate::theme::{GroupState, Theme};
 
 /// A colorful theme
 pub struct ColorfulTheme {
@@ -50,6 +50,12 @@ pub struct ColorfulTheme {
     // Formats the highlighting if matched characters
     #[cfg(feature = "fuzzy-select")]
     pub fuzzy_match_highlight_style: Style,
+    /// Group header prefix when all items selected
+    pub group_all_prefix: StyledObject<String>,
+    /// Group header prefix when some items selected
+    pub group_partial_prefix: StyledObject<String>,
+    /// Group header prefix when no items selected
+    pub group_none_prefix: StyledObject<String>,
 }
 
 impl Default for ColorfulTheme {
@@ -77,6 +83,9 @@ impl Default for ColorfulTheme {
             fuzzy_cursor_style: Style::new().for_stderr().black().on_white(),
             #[cfg(feature = "fuzzy-select")]
             fuzzy_match_highlight_style: Style::new().for_stderr().bold(),
+            group_all_prefix: style("◉".to_string()).for_stderr().green(),
+            group_partial_prefix: style("◐".to_string()).for_stderr().yellow(),
+            group_none_prefix: style("○".to_string()).for_stderr().white().dim(),
         }
     }
 }
@@ -398,6 +407,56 @@ impl Theme for ColorfulTheme {
         } else {
             write!(f, "{}", text)
         }
+    }
+
+    fn format_group_multi_select_header(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        state: GroupState,
+        active: bool,
+    ) -> fmt::Result {
+        let prefix = match state {
+            GroupState::All => &self.group_all_prefix,
+            GroupState::Partial => &self.group_partial_prefix,
+            GroupState::None => &self.group_none_prefix,
+        };
+        let cursor = if active {
+            &self.active_item_prefix
+        } else {
+            &self.inactive_item_prefix
+        };
+        let styled_text = if active {
+            self.active_item_style.apply_to(text)
+        } else {
+            self.inactive_item_style.apply_to(text)
+        };
+        write!(f, "{} {} {}", cursor, prefix, styled_text)
+    }
+
+    fn format_group_multi_select_item(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        checked: bool,
+        active: bool,
+    ) -> fmt::Result {
+        let check_prefix = if checked {
+            &self.checked_item_prefix
+        } else {
+            &self.unchecked_item_prefix
+        };
+        let cursor = if active {
+            &self.active_item_prefix
+        } else {
+            &self.inactive_item_prefix
+        };
+        let styled_text = if active {
+            self.active_item_style.apply_to(text)
+        } else {
+            self.inactive_item_style.apply_to(text)
+        };
+        write!(f, "{}   {} {}", cursor, check_prefix, styled_text)
     }
 
     /// Formats a fuzzy-selectprompt after selection.
