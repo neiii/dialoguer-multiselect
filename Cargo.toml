@@ -1,15 +1,15 @@
 [package]
-name = "dialoguer"
-description = "A command line prompting library."
+name = "dialoguer-multiselect"
+description = "A command line prompting library. Fork of dialoguer with multiselect improvements."
 version = "0.12.0"
 edition = "2021"
 rust-version = "1.71"
-keywords = ["cli", "menu", "prompt"]
+keywords = ["cli", "menu", "prompt", "multiselect"]
 categories = ["command-line-interface"]
 license = "MIT"
-homepage = "https://github.com/console-rs/dialoguer"
-repository = "https://github.com/console-rs/dialoguer"
-documentation = "https://docs.rs/dialoguer"
+homepage = "https://github.com/neiii/dialoguer-multiselect"
+repository = "https://github.com/neiii/dialoguer-multiselect"
+documentation = "https://docs.rs/dialoguer-multiselect"
 readme = "README.md"
 
 [features]

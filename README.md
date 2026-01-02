@@ -1,10 +1,12 @@
-# dialoguer
+# dialoguer-multiselect
 
-[![Build Status](https://github.com/console-rs/dialoguer/workflows/CI/badge.svg)](https://github.com/console-rs/dialoguer/actions?query=branch%3Amain)
-[![Latest version](https://img.shields.io/crates/v/dialoguer.svg)](https://crates.io/crates/dialoguer)
-[![Documentation](https://docs.rs/dialoguer/badge.svg)](https://docs.rs/dialoguer)
+[![Build Status](https://github.com/neiii/dialoguer-multiselect/workflows/CI/badge.svg)](https://github.com/neiii/dialoguer-multiselect/actions?query=branch%3Amain)
+[![Latest version](https://img.shields.io/crates/v/dialoguer-multiselect.svg)](https://crates.io/crates/dialoguer-multiselect)
+[![Documentation](https://docs.rs/dialoguer-multiselect/badge.svg)](https://docs.rs/dialoguer-multiselect)
 
 A rust library for command line prompts and similar things.
+
+> **Note:** This is a fork of [dialoguer](https://github.com/console-rs/dialoguer) with multiselect improvements.
 
 Best paired with other libraries in the family:
 
@@ -13,7 +15,8 @@ Best paired with other libraries in the family:
 
 ## License and Links
 
-* [Documentation](https://docs.rs/dialoguer/)
-* [Issue Tracker](https://github.com/console-rs/dialoguer/issues)
-* [Examples](https://github.com/console-rs/dialoguer/tree/main/examples)
-* License: [MIT](https://github.com/console-rs/dialoguer/blob/main/LICENSE)
+* [Documentation](https://docs.rs/dialoguer-multiselect/)
+* [Issue Tracker](https://github.com/neiii/dialoguer-multiselect/issues)
+* [Examples](https://github.com/neiii/dialoguer-multiselect/tree/main/examples)
+* [Upstream](https://github.com/console-rs/dialoguer)
+* License: [MIT](https://github.com/neiii/dialoguer-multiselect/blob/main/LICENSE)
