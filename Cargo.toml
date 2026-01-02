@@ -1,7 +1,7 @@
 [package]
 name = "dialoguer-multiselect"
 description = "A command line prompting library. Fork of dialoguer with multiselect improvements."
-version = "0.13.0"
+version = "0.13.1"
 edition = "2021"
 rust-version = "1.71"
 keywords = ["cli", "menu", "prompt", "multiselect"]

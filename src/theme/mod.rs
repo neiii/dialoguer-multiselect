@@ -343,7 +343,7 @@ pub trait Theme {
         checked: bool,
         active: bool,
     ) -> fmt::Result {
-        let icon = if checked { "☑" } else { "☐" };
+        let icon = if checked { "✔" } else { "☐" };
         let prefix = if active { ">" } else { " " };
         write!(
             f,

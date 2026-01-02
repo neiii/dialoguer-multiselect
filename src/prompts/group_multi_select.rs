@@ -409,7 +409,7 @@ impl<T: ToString> GroupMultiSelect<'_, T> {
         let paging_info = if capacity < total {
             let total_pages = (total + capacity - 1) / capacity;
             let current_page = page_offset / capacity + 1;
-            Some((total_pages, current_page))
+            Some((current_page, total_pages))
         } else {
             None
         };
