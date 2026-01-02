@@ -1,6 +1,7 @@
 #![allow(clippy::needless_doctest_main)]
 
 pub mod confirm;
+pub mod group_multi_select;
 pub mod input;
 pub mod multi_select;
 pub mod select;
