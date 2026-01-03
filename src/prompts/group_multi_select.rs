@@ -190,7 +190,7 @@ impl<T: ToString> GroupMultiSelect<'_, T> {
         let capacity = self
             .max_length
             .unwrap_or(usize::MAX)
-            .min(term.size().0 as usize);
+            .min(term.size().0.saturating_sub(1) as usize);
 
         term.hide_cursor()?;
 
