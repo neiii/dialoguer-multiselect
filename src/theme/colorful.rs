@@ -459,6 +459,39 @@ impl Theme for ColorfulTheme {
         write!(f, "{}   {} {}", cursor, check_prefix, styled_text)
     }
 
+    fn format_group_multi_select_item_warning(
+        &self,
+        f: &mut dyn fmt::Write,
+        text: &str,
+        message: &str,
+        checked: bool,
+        active: bool,
+    ) -> fmt::Result {
+        let check_prefix = if checked {
+            style("✔".to_string()).for_stderr().yellow()
+        } else {
+            style("☐".to_string()).for_stderr().yellow()
+        };
+        let cursor = if active {
+            &self.active_item_prefix
+        } else {
+            &self.inactive_item_prefix
+        };
+        let styled_text = if active {
+            self.active_item_style.apply_to(text)
+        } else {
+            self.inactive_item_style.apply_to(text)
+        };
+        write!(
+            f,
+            "{}   {} {} {}",
+            cursor,
+            check_prefix,
+            styled_text,
+            style(format!("⚠ {}", message)).for_stderr().yellow()
+        )
+    }
+
     /// Formats a fuzzy-selectprompt after selection.
     #[cfg(feature = "fuzzy-select")]
     fn format_fuzzy_select_prompt(
